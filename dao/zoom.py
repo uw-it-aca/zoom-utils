@@ -7,20 +7,17 @@ def get_sub_accounts():
     return Accounts().get_sub_accounts()
 
 
-def get_pro_users():
-    users = []
-    for user in Users().get_users():
-        if user.type == ZoomUser.TYPE_PRO:
-            users.append(user)
-    return users
+def get_account_pro_users(account=None):
+    if account is None:
+        all_users = Users().get_users()  # Main account
+    else:
+        all_users = Accounts().get_account_users(account.id)
 
-
-def get_account_pro_users(account):
-    users = []
-    for user in Accounts().get_account_users(account.id):
+    pro_users = []
+    for user in all_users:
         if user.type == ZoomUser.TYPE_PRO:
-            users.append(user)
-    return users
+            pro_users.append(user)
+    return pro_users
 
 
 def update_user_basic(user):
