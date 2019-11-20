@@ -10,13 +10,13 @@ logger = getLogger(__name__)
 
 def reconcile_account_users(account=None):
     if account is None:
-        group_id = getattr(settings, 'ZOOM_ACCOUNT_GROUP')
+        group_id = getattr(settings, 'ZOOM_ACCOUNT_GROUP', '')
         account_name = 'UW Zoom Main'
     else:
-        group_id = getattr(settings, 'ZOOM_SUBACCOUNT_GROUP_' + account.id)
+        group_id = getattr(settings, 'ZOOM_SUBACCOUNT_GROUP_' + account.id, '')
         account_name = account.account_name
 
-    if not group_id:
+    if not len(group_id):
         print('SKIPPED {}: Group not configured'.format(account_name))
         return
 
