@@ -1,40 +1,77 @@
 from commonconf.backends import use_configparser_backend
 from commonconf import settings
-from dao.zoom import get_sub_accounts, get_account_pro_users
+from argparse import ArgumentParser
+from dao.zoom import (
+    get_sub_accounts, get_account_pro_users, update_account_user_basic)
 from dao.groups import get_group_members
 from logging import getLogger
+from smtplib import SMTP
+import argparse
 import os
 
 logger = getLogger(__name__)
 
 
-def reconcile_account_users(account=None):
+def notify_admins(message):
+    with SMTP(getattr(settings, 'EMAIL_HOST')) as smtp:
+        smtp.set_debuglevel(1)
+        smtp.sendmail(getattr(settings, 'EMAIL_SENDER'),
+                      getattr(settings, 'EMAIL_RECIPIENT'),
+                      message)
+
+
+def reconcile_account_users(account=None, update=False):
+    changed = []
     if account is None:
         group_id = getattr(settings, 'ZOOM_ACCOUNT_GROUP', '')
-        account_name = 'UW Zoom Main'
     else:
         group_id = getattr(settings, 'ZOOM_SUBACCOUNT_GROUP_' + account.id, '')
-        account_name = account.account_name
 
     if not len(group_id):
-        print('SKIPPED {}: Group not configured'.format(account_name))
-        return
+        logger.info('SKIPPED {}: Group not configured'.format(
+            account.account_name))
+        return changed
 
     group_members = get_group_members(group_id)
     for user in get_account_pro_users(account):
         if user.email not in group_members:
-            print('{}: Pro user {} not present in {}'.format(
-                account_name, user.email, group_id))
+            if update:
+                update_account_user_basic(user, account)
+            changed.append({'user': user.email, 'group': group_id})
+    return changed
 
 
-def run():
-    reconcile_account_users()  # Main account
+def make_message(account_name, data):
+    return ('\n\nAccount: {}\n\n'.format(account_name) +
+            '\n'.join('{} Not present in {}'.format(
+                d['user'].ljust(24), d['group']) for d in data))
+
+
+def run(update):
+    message = '\nThese Zoom users have been downgraded from Pro to Basic:'
+    changed = reconcile_account_users(update=update)  # Main account
+    if len(changed):
+        message += make_message('UW Zoom Main', changed)
+
     for account in get_sub_accounts():
-        reconcile_account_users(account)
+        changed = reconcile_account_users(account, update=update)
+        if len(changed):
+            message += make_message(account.account_name, changed)
+
+    if len(message):
+        message += '\n\n'
+        if update:
+            notify_admins(message)
+        else:
+            print(message)
 
 
 if __name__ == '__main__':
     settings_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                  'settings.cfg')
     use_configparser_backend(settings_path, 'ZOOM')
-    run()
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--update', action='store_true', default=False, help='Updates users')
+    args = parser.parse_args()
+    run(args.update)

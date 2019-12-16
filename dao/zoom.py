@@ -20,5 +20,8 @@ def get_account_pro_users(account=None):
     return pro_users
 
 
-def update_user_basic(user):
-    Users().update_user_type(user.id, ZoomUser.TYPE_BASIC)
+def update_account_user_basic(user, account=None):
+    if account is None:
+        Users().update_user_type(user.id, ZoomUser.TYPE_BASIC)
+    else:
+        Accounts().update_account_user_type(user.id, ZoomUser.TYPE_BASIC)
