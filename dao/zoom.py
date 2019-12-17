@@ -24,4 +24,5 @@ def update_account_user_basic(user, account=None):
     if account is None:
         Users().update_user_type(user.id, ZoomUser.TYPE_BASIC)
     else:
-        Accounts().update_account_user_type(user.id, ZoomUser.TYPE_BASIC)
+        Accounts().update_account_user_type(
+            account.id, user.id, ZoomUser.TYPE_BASIC)
