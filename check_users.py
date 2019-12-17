@@ -54,7 +54,7 @@ def make_message(account_name, data):
 
 
 def run(update):
-    message = '\nThese Zoom users have been downgraded from Pro to Basic:'
+    message = ''
     changed = reconcile_account_users(update=update)  # Main account
     if len(changed):
         message += make_message('UW Zoom Main', changed)
@@ -65,7 +65,8 @@ def run(update):
             message += make_message(account.account_name, changed)
 
     if len(message):
-        message += '\n\n'
+        message = ('\nThese Zoom users have been downgraded from '
+                   'Pro to Basic:{}\n\n').format(message)
         if update:
             notify_admins(message)
         else:
