@@ -12,7 +12,7 @@ setup(
     author_email="aca-it@uw.edu",
     include_package_data=True,
     install_requires=[
-        'UW-RestClients-Zoom>=0.1.4,<2.0',
+        'UW-RestClients-Zoom>=0.1.5,<2.0',
         'UW-RestClients-GWS>=2.2.2,<3.0',
     ],
     license='Apache License, Version 2.0',

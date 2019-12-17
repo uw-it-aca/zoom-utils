@@ -5,6 +5,7 @@ from dao.zoom import (
     get_sub_accounts, get_account_pro_users, update_account_user_basic)
 from dao.groups import get_group_members
 from logging import getLogger
+from email.message import EmailMessage
 from smtplib import SMTP
 import argparse
 import os
@@ -13,11 +14,16 @@ logger = getLogger(__name__)
 
 
 def notify_admins(message):
+    email_message = EmailMessage()
+    email_message['Subject'] = 'Summary of changes to Zoom user licenses'
+    email_message['From'] = getattr(settings, 'EMAIL_SENDER')
+    email_message['To'] = getattr(settings, 'EMAIL_RECIPIENT')
+    email_message['Bcc'] = getattr(settings, 'EMAIL_BCC')
+    email_message.set_content(message)
+
     with SMTP(getattr(settings, 'EMAIL_HOST')) as smtp:
         smtp.set_debuglevel(1)
-        smtp.sendmail(getattr(settings, 'EMAIL_SENDER'),
-                      getattr(settings, 'EMAIL_RECIPIENT'),
-                      message)
+        smtp.send_message(email_message)
 
 
 def reconcile_account_users(account=None, update=False):
