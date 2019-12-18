@@ -18,6 +18,7 @@ def notify_admins(message):
     email_message['Subject'] = 'Summary of changes to Zoom user licenses'
     email_message['From'] = getattr(settings, 'EMAIL_SENDER')
     email_message['To'] = getattr(settings, 'EMAIL_RECIPIENT')
+    email_message['Cc'] = getattr(settings, 'EMAIL_CC')
     email_message['Bcc'] = getattr(settings, 'EMAIL_BCC')
     email_message.set_content(message)
 
